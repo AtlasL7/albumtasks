@@ -1,0 +1,442 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Coast Modern album 3</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; color: #1f2937; margin: 0; background: #fff; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 16px; }
+  .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; }
+  h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+  .headright { display: flex; align-items: center; gap: 12px; }
+  .count { font-size: 12px; color: #9ca3af; }
+  .status { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #9ca3af; }
+  .dot { width: 8px; height: 8px; border-radius: 999px; background: #d1d5db; }
+  .dot.ok { background: #16a34a; } .dot.bad { background: #ef4444; } .dot.wait { background: #d97706; }
+
+  .banner { margin-bottom: 16px; padding: 12px 14px; border-radius: 10px; background: #fef3c7; border: 1px solid #fcd34d; font-size: 13px; color: #92400e; line-height: 1.5; }
+  .banner code { background: #fff7e6; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+  .legend { margin-bottom: 16px; padding: 12px; border-radius: 10px; background: #f9fafb; border: 1px solid #e5e7eb; }
+  .legend-label { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .filterchip { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid; transition: all .12s; }
+  .clearfilter { margin-top: 8px; font-size: 12px; color: #9ca3af; text-decoration: underline; background: none; border: none; cursor: pointer; padding: 0; }
+  .clearfilter:hover { color: #4b5563; }
+  .newtag-btn { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; color: #6b7280; border: 1px dashed #d1d5db; background: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+  .newtag-btn:hover { background: #fff; }
+  .newtag-edit { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 999px; background: #fff; border: 1px solid #d1d5db; }
+  .newtag-edit input { font-size: 12px; border: none; outline: none; width: 80px; background: transparent; }
+  .swatch { width: 14px; height: 14px; border-radius: 999px; cursor: pointer; border: none; padding: 0; }
+  .mini-btn { background: none; border: none; cursor: pointer; font-size: 12px; padding: 0 2px; }
+
+  .addrow { display: flex; gap: 8px; margin-bottom: 12px; }
+  .addrow input { flex: 1; padding: 8px 12px; border-radius: 10px; border: 1px solid #d1d5db; font-size: 14px; outline: none; }
+  .addrow input:focus { border-color: #6b7280; }
+  .add-btn { padding: 8px 16px; border-radius: 10px; background: #1f2937; color: #fff; font-size: 14px; font-weight: 500; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+  .add-btn:hover { background: #374151; }
+
+  .table { border-radius: 10px; border: 1px solid #e5e7eb; }
+  .thead, .trow { display: grid; grid-template-columns: 26px 44px 3fr 5fr 4fr; }
+  .thead { background: #f3f4f6; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 10px 10px 0 0; }
+  #rows .trow:last-child { border-radius: 0 0 10px 10px; }
+  .thead > div { padding: 8px 12px; }
+  .handle { display: flex; align-items: center; justify-content: center; color: #d1d5db; cursor: grab; padding-top: 12px; }
+  .handle:hover { color: #9ca3af; }
+  .handle:active { cursor: grabbing; }
+  .handle.disabled { opacity: .35; cursor: default; }
+  .num { padding: 10px 6px; font-size: 13px; color: #9ca3af; text-align: center; font-variant-numeric: tabular-nums; }
+  .trow.dragging { opacity: .4; }
+  .trow.dropbefore { box-shadow: inset 0 2px 0 0 #1f2937; }
+  .trow.dropafter { box-shadow: inset 0 -2px 0 0 #1f2937; }
+  .sort-btn { text-align: left; display: flex; align-items: center; gap: 4px; background: none; border: none; cursor: pointer; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; }
+  .sort-btn:hover { color: #1f2937; }
+  .sort-state { text-transform: none; font-weight: 400; color: #9ca3af; }
+
+  .trow { border-top: 1px solid #f3f4f6; align-items: start; }
+  .trow.alt { background: rgba(249,250,251,.5); }
+  .cell { padding: 10px 12px; }
+  .cell input.title, .cell textarea { width: 100%; border: none; outline: none; background: transparent; font: inherit; border-radius: 4px; margin-left: -4px; padding: 1px 4px; }
+  .cell input.title { font-size: 14px; font-weight: 500; }
+  .cell input.title:focus, .cell textarea:focus { background: #fff; }
+  .cell textarea { font-size: 14px; resize: none; min-height: 24px; line-height: 1.4; }
+  .cell textarea::placeholder { color: #d1d5db; }
+
+  .tagcell { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .tagchip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; color: #fff; }
+  .tagchip button { background: none; border: none; color: #fff; opacity: .7; cursor: pointer; padding: 0; display: flex; }
+  .tagchip button:hover { opacity: 1; }
+  .addtag { width: 20px; height: 20px; border-radius: 999px; border: 1px dashed #d1d5db; color: #9ca3af; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .addtag:hover { border-color: #6b7280; color: #4b5563; }
+  .picker-anchor { position: relative; }
+  .picker { position: absolute; z-index: 50; margin-top: 4px; left: 0; width: 190px; background: #fff; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.12); border: 1px solid #e5e7eb; padding: 6px; }
+  .picker button { width: 100%; display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 6px; font-size: 12px; border: none; background: none; cursor: pointer; text-align: left; }
+  .picker button:hover { background: #f9fafb; }
+  .pdot { width: 12px; height: 12px; border-radius: 999px; flex-shrink: 0; }
+  .overlay { position: fixed; inset: 0; z-index: 10; }
+
+  .notecell { display: flex; align-items: start; gap: 4px; }
+  .del { opacity: 0; color: #d1d5db; background: none; border: none; cursor: pointer; margin-top: 2px; flex-shrink: 0; }
+  .trow:hover .del { opacity: 1; }
+  .del:hover { color: #ef4444; }
+  .empty { padding: 32px 12px; text-align: center; font-size: 14px; color: #9ca3af; }
+  svg { display: block; }
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <h1>Coast Modern album 3</h1>
+    <div class="headright">
+      <span class="count" id="count"></span>
+      <span class="status" id="status"><span class="dot" id="dot"></span><span id="statustext">offline</span></span>
+    </div>
+  </div>
+
+  <div class="banner" id="banner" style="display:none"></div>
+
+  <div class="legend">
+    <div class="legend-label">🏷 Needs — click to filter</div>
+    <div class="chips" id="legend-chips"></div>
+    <button class="clearfilter" id="clearfilter" style="display:none"></button>
+  </div>
+
+  <div class="addrow">
+    <input id="newtitle" placeholder="Add a track title…" />
+    <button class="add-btn" id="addbtn">+ Add</button>
+  </div>
+
+  <div class="table">
+    <div class="thead">
+      <div></div>
+      <div style="text-align:center">#</div>
+      <div><button class="sort-btn" id="sortbtn">Track ⇅ <span class="sort-state" id="sortstate"></span></button></div>
+      <div>Needs</div>
+      <div>Notes</div>
+    </div>
+    <div id="rows"></div>
+  </div>
+</div>
+
+<script>
+/* ===================================================================
+   1) PASTE YOUR SUPABASE KEYS HERE  (Project Settings → API)
+   =================================================================== */
+const SUPABASE_URL = "https://gqjoeupavfgbwcmexklr.supabase.co";   // Project URL
+const SUPABASE_ANON_KEY = "sb_publishable_VoVJt1U9WhgGLq-r0nh9PQ_t9zadffx";          // anon public key
+/* =================================================================== */
+
+const DEFAULT_TAGS = [
+  { id: "lead",     label: "lead vocal",       color: "#e8554e" },
+  { id: "backing",  label: "backing vocal",    color: "#f08a3c" },
+  { id: "instr",    label: "instrumentation",  color: "#e8b73a" },
+  { id: "arr",      label: "arrangement",      color: "#5bb85b" },
+  { id: "prod",     label: "production",       color: "#3a9dc4" },
+  { id: "mix",      label: "mix",              color: "#7a6ad8" },
+  { id: "lyrics",   label: "lyrics",           color: "#9c6b3f" },
+  { id: "bounce",   label: "bounce stems",     color: "#6b7280" },
+  { id: "bounced",  label: "stems bounced 👍", color: "#16a34a" },
+  { id: "luke",     label: "Luke",             color: "#c44d8f" },
+  { id: "coleman",  label: "Coleman",          color: "#1f9e8a" },
+];
+const EXCLUSIVE = [["bounce", "bounced"]];
+const SWATCHES = ["#e8554e","#f08a3c","#e8b73a","#5bb85b","#3a9dc4","#7a6ad8","#c44d8f","#1f9e8a","#8a8f98","#d4654f"];
+const uid = () => Math.random().toString(36).slice(2, 9);
+const CONFIGURED = !SUPABASE_URL.includes("YOUR-PROJECT") && !SUPABASE_ANON_KEY.includes("YOUR-ANON");
+
+let state = { tracks: [], tagDefs: DEFAULT_TAGS.slice(), filter: [], sort: "custom", picker: null, newTag: false, newTagColor: SWATCHES[0], dragId: null };
+let online = false;
+
+/* ---- Supabase REST helpers ---------------------------------------- */
+async function api(path, opts = {}) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/" + path, {
+    ...opts,
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: "Bearer " + SUPABASE_ANON_KEY,
+      "Content-Type": "application/json",
+      ...(opts.headers || {}),
+    },
+  });
+  if (!res.ok) throw new Error(res.status + " " + (await res.text()));
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : null;
+}
+const upsert = (table, rows) =>
+  api(table, { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(rows) });
+const patch = (table, q, body) =>
+  api(table + "?" + q, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify(body) });
+const insert = (table, row) =>
+  api(table, { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify(row) });
+const del = (table, q) => api(table + "?" + q, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+
+function setStatus(kind, text) {
+  const d = document.getElementById("dot");
+  d.className = "dot " + kind;
+  document.getElementById("statustext").textContent = text;
+}
+
+/* ---- Load + poll -------------------------------------------------- */
+async function fetchAll() {
+  if (!CONFIGURED) return;
+  try {
+    const tracks = await api("tracks?select=*&order=position.asc");
+    const meta = await api("app_meta?id=eq.tagdefs&select=data");
+    online = true;
+    setStatus("ok", "synced");
+
+    // don't clobber a field the user is actively editing
+    const ae = document.activeElement;
+    const editing = ae && ae.dataset && ae.dataset.trackid;
+    if (editing) return;
+
+    state.tracks = (tracks || []).map(t => ({
+      id: t.id, title: t.title || "", notes: t.notes || "",
+      tags: Array.isArray(t.tags) ? t.tags.filter(g => g !== "needs") : [],
+      position: t.position || 0,
+    }));
+    if (meta && meta[0] && meta[0].data && Array.isArray(meta[0].data.tags)) {
+      const saved = meta[0].data.tags.filter(t => t.id !== "needs");
+      const have = new Set(saved.map(t => t.id));
+      state.tagDefs = [...saved, ...DEFAULT_TAGS.filter(t => !have.has(t.id))];
+    }
+    render();
+  } catch (e) {
+    online = false;
+    setStatus("bad", "offline");
+    console.error(e);
+  }
+}
+
+/* ---- Ops (update local + push to Supabase) ------------------------ */
+function nextPosition() {
+  return state.tracks.reduce((m, t) => Math.max(m, t.position || 0), 0) + 1;
+}
+async function addTrack() {
+  const inp = document.getElementById("newtitle");
+  const title = inp.value.trim();
+  if (!title) return;
+  const row = { id: uid(), title, tags: [], notes: "", position: nextPosition() };
+  state.tracks.push(row);
+  inp.value = "";
+  render();
+  try { await insert("tracks", row); } catch (e) { setStatus("bad", "offline"); }
+}
+async function removeTrack(id) {
+  state.tracks = state.tracks.filter(t => t.id !== id);
+  render();
+  try { await del("tracks", "id=eq." + id); } catch (e) { setStatus("bad", "offline"); }
+}
+let editTimer = {};
+function editTrackField(id, field, value) {
+  const tr = state.tracks.find(t => t.id === id);
+  if (!tr) return;
+  tr[field] = value;
+  clearTimeout(editTimer[id + field]);
+  editTimer[id + field] = setTimeout(() => {
+    patch("tracks", "id=eq." + id, { [field]: value }).catch(() => setStatus("bad", "offline"));
+  }, 500);
+}
+async function toggleTrackTag(trackId, tagId) {
+  const tr = state.tracks.find(t => t.id === trackId);
+  if (!tr) return;
+  if (tr.tags.includes(tagId)) {
+    tr.tags = tr.tags.filter(g => g !== tagId);
+  } else {
+    for (const pair of EXCLUSIVE) if (pair.includes(tagId)) {
+      const other = pair.find(x => x !== tagId);
+      tr.tags = tr.tags.filter(g => g !== other);
+    }
+    tr.tags.push(tagId);
+  }
+  render();
+  try { await patch("tracks", "id=eq." + trackId, { tags: tr.tags }); } catch (e) { setStatus("bad", "offline"); }
+}
+async function moveTrack(dragId, targetId, after) {
+  if (!dragId || dragId === targetId) return;
+  const from = state.tracks.findIndex(t => t.id === dragId);
+  if (from === -1) return;
+  const [moved] = state.tracks.splice(from, 1);
+  let to = state.tracks.findIndex(t => t.id === targetId);
+  if (to === -1) state.tracks.push(moved);
+  else state.tracks.splice(after ? to + 1 : to, 0, moved);
+  state.tracks.forEach((t, i) => (t.position = i + 1));
+  state.dragId = null;
+  render();
+  try {
+    await upsert("tracks", state.tracks.map(t => ({ id: t.id, title: t.title, tags: t.tags, notes: t.notes, position: t.position })));
+  } catch (e) { setStatus("bad", "offline"); }
+}
+function toggleFilter(id) {
+  state.filter = state.filter.includes(id) ? state.filter.filter(x => x !== id) : [...state.filter, id];
+  render();
+}
+function cycleSort() {
+  state.sort = state.sort === "custom" ? "title-asc" : state.sort === "title-asc" ? "title-desc" : "custom";
+  render();
+}
+async function addTagDef() {
+  const inp = document.getElementById("newtaginput");
+  const label = inp.value.trim();
+  if (!label) return;
+  state.tagDefs.push({ id: uid(), label, color: state.newTagColor });
+  state.newTag = false;
+  render();
+  try { await upsert("app_meta", { id: "tagdefs", data: { tags: state.tagDefs } }); } catch (e) { setStatus("bad", "offline"); }
+}
+
+/* ---- DOM helpers + icons ------------------------------------------ */
+function el(tag, props, children) {
+  const e = document.createElement(tag);
+  if (props) for (const k in props) {
+    if (k === "style") Object.assign(e.style, props[k]);
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2).toLowerCase(), props[k]);
+    else if (k === "class") e.className = props[k];
+    else if (k === "html") e.innerHTML = props[k];
+    else e.setAttribute(k, props[k]);
+  }
+  (children || []).forEach(c => c != null && e.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
+  return e;
+}
+const X = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+const PLUS = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>';
+const TRASH = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+const GRIP = '<svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor"><circle cx="3.5" cy="3" r="1.5"/><circle cx="8.5" cy="3" r="1.5"/><circle cx="3.5" cy="8" r="1.5"/><circle cx="8.5" cy="8" r="1.5"/><circle cx="3.5" cy="13" r="1.5"/><circle cx="8.5" cy="13" r="1.5"/></svg>';
+
+function tagById(id) { return state.tagDefs.find(t => t.id === id); }
+
+function render() {
+  document.getElementById("count").textContent = state.tracks.length + " tracks";
+
+  // setup banner
+  const banner = document.getElementById("banner");
+  if (!CONFIGURED) {
+    banner.style.display = "";
+    banner.innerHTML = "Not connected yet. Add your <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> near the top of this file (see the setup steps), then reload.";
+    setStatus("wait", "not set up");
+  } else { banner.style.display = "none"; }
+
+  document.getElementById("sortstate").textContent = state.sort === "title-asc" ? "A→Z" : state.sort === "title-desc" ? "Z→A" : "";
+
+  // legend
+  const legend = document.getElementById("legend-chips");
+  legend.innerHTML = "";
+  state.tagDefs.forEach(t => {
+    const active = state.filter.includes(t.id);
+    legend.appendChild(el("button", {
+      class: "filterchip",
+      style: { background: active ? t.color : t.color + "22", color: active ? "#fff" : t.color, borderColor: t.color + (active ? "" : "55") },
+      onClick: () => toggleFilter(t.id)
+    }, [t.label]));
+  });
+  if (state.newTag) {
+    const wrap = el("span", { class: "newtag-edit" });
+    const input = el("input", { id: "newtaginput", placeholder: "tag name", onKeydown: e => e.key === "Enter" && addTagDef() });
+    wrap.appendChild(input);
+    SWATCHES.slice(0, 6).forEach(c => wrap.appendChild(el("button", {
+      class: "swatch", style: { background: c, outline: state.newTagColor === c ? "2px solid #333" : "none", outlineOffset: "1px" },
+      onClick: () => { state.newTagColor = c; render(); document.getElementById("newtaginput").focus(); }
+    })));
+    wrap.appendChild(el("button", { class: "mini-btn", style: { color: "#16a34a", fontWeight: "600" }, onClick: addTagDef }, ["add"]));
+    wrap.appendChild(el("button", { class: "mini-btn", style: { color: "#9ca3af" }, html: X, onClick: () => { state.newTag = false; render(); } }));
+    legend.appendChild(wrap);
+    setTimeout(() => input.focus(), 0);
+  } else {
+    legend.appendChild(el("button", { class: "newtag-btn", html: PLUS + " new tag", onClick: () => { state.newTag = true; state.newTagColor = SWATCHES[state.tagDefs.length % SWATCHES.length]; render(); } }));
+  }
+  const cf = document.getElementById("clearfilter");
+  if (state.filter.length) { cf.style.display = ""; cf.textContent = "clear filter (" + state.filter.length + ")"; cf.onclick = () => { state.filter = []; render(); }; }
+  else cf.style.display = "none";
+
+  // preserve focus across rebuild
+  const ae = document.activeElement;
+  let focus = null;
+  if (ae && ae.dataset && ae.dataset.trackid) focus = { id: ae.dataset.trackid, field: ae.dataset.field, s: ae.selectionStart, e: ae.selectionEnd };
+
+  let view = state.tracks;
+  if (state.filter.length) view = view.filter(t => state.filter.every(f => t.tags.includes(f)));
+  if (state.sort === "title-asc") view = [...view].sort((a, b) => a.title.localeCompare(b.title));
+  if (state.sort === "title-desc") view = [...view].sort((a, b) => b.title.localeCompare(a.title));
+
+  const rows = document.getElementById("rows");
+  rows.innerHTML = "";
+  if (!view.length) {
+    rows.appendChild(el("div", { class: "empty" }, [state.tracks.length ? "No tracks match this filter." : "No tracks yet — add one above."]));
+    return;
+  }
+
+  const canDrag = state.sort === "custom";
+  view.forEach((tr, i) => {
+    const row = el("div", { class: "trow" + (i % 2 ? " alt" : "") });
+
+    const handle = el("div", { class: "handle" + (canDrag ? "" : " disabled"), html: GRIP });
+    if (canDrag) {
+      handle.setAttribute("draggable", "true");
+      handle.addEventListener("dragstart", e => { state.dragId = tr.id; row.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", tr.id); } catch {} });
+      handle.addEventListener("dragend", () => { state.dragId = null; document.querySelectorAll(".trow").forEach(r => r.classList.remove("dragging", "dropbefore", "dropafter")); });
+      row.addEventListener("dragover", e => { if (!state.dragId || state.dragId === tr.id) return; e.preventDefault(); const rect = row.getBoundingClientRect(); const after = e.clientY > rect.top + rect.height / 2; row.classList.toggle("dropbefore", !after); row.classList.toggle("dropafter", after); });
+      row.addEventListener("dragleave", () => row.classList.remove("dropbefore", "dropafter"));
+      row.addEventListener("drop", e => { e.preventDefault(); const rect = row.getBoundingClientRect(); const after = e.clientY > rect.top + rect.height / 2; moveTrack(state.dragId, tr.id, after); });
+    }
+    row.appendChild(handle);
+
+    const num = state.tracks.findIndex(t => t.id === tr.id) + 1;
+    row.appendChild(el("div", { class: "num" }, [String(num)]));
+
+    const titleInput = el("input", { class: "title", value: tr.title });
+    titleInput.dataset.trackid = tr.id; titleInput.dataset.field = "title";
+    titleInput.addEventListener("input", e => editTrackField(tr.id, "title", e.target.value));
+    row.appendChild(el("div", { class: "cell" }, [titleInput]));
+
+    const tagcell = el("div", { class: "cell tagcell" });
+    tr.tags.forEach(tid => {
+      const t = tagById(tid); if (!t) return;
+      const chip = el("span", { class: "tagchip", style: { background: t.color } }, [t.label]);
+      chip.appendChild(el("button", { html: X, onClick: () => toggleTrackTag(tr.id, tid) }));
+      tagcell.appendChild(chip);
+    });
+    const anchor = el("div", { class: "picker-anchor" });
+    anchor.appendChild(el("button", { class: "addtag", html: PLUS, onClick: () => { state.picker = state.picker === tr.id ? null : tr.id; render(); } }));
+    if (state.picker === tr.id) {
+      anchor.appendChild(el("div", { class: "overlay", onClick: () => { state.picker = null; render(); } }));
+      const pick = el("div", { class: "picker" });
+      state.tagDefs.forEach(t => {
+        const on = tr.tags.includes(t.id);
+        pick.appendChild(el("button", { onClick: () => toggleTrackTag(tr.id, t.id) }, [
+          el("span", { class: "pdot", style: { background: on ? t.color : "transparent", border: "2px solid " + t.color } }),
+          el("span", { style: { fontWeight: on ? "600" : "400" } }, [t.label])
+        ]));
+      });
+      anchor.appendChild(pick);
+    }
+    tagcell.appendChild(anchor);
+    row.appendChild(tagcell);
+
+    const notecell = el("div", { class: "cell notecell" });
+    const ta = el("textarea", { placeholder: "notes…", rows: "1" });
+    ta.dataset.trackid = tr.id; ta.dataset.field = "notes"; ta.value = tr.notes;
+    const autosize = () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; };
+    ta.addEventListener("input", e => { editTrackField(tr.id, "notes", e.target.value); autosize(); });
+    notecell.appendChild(ta);
+    notecell.appendChild(el("button", { class: "del", html: TRASH, onClick: () => removeTrack(tr.id) }));
+    row.appendChild(notecell);
+    setTimeout(autosize, 0);
+
+    rows.appendChild(row);
+  });
+
+  if (focus) {
+    const sel = rows.querySelector('[data-trackid="' + focus.id + '"][data-field="' + focus.field + '"]');
+    if (sel) { sel.focus(); try { sel.setSelectionRange(focus.s, focus.e); } catch {} }
+  }
+}
+
+document.getElementById("addbtn").addEventListener("click", addTrack);
+document.getElementById("newtitle").addEventListener("keydown", e => { if (e.key === "Enter") addTrack(); });
+document.getElementById("sortbtn").addEventListener("click", cycleSort);
+
+render();
+if (CONFIGURED) {
+  setStatus("wait", "connecting…");
+  fetchAll();
+  setInterval(fetchAll, 4000);   // pulls in collaborators' changes every 4s
+}
+</script>
