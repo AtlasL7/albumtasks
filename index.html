@@ -3,8 +3,9 @@
 <title>Coast Modern album 3</title>
 <style>
   * { box-sizing: border-box; }
+  :root { --c-track: 200px; --c-tags: 300px; }
   body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; color: #1f2937; margin: 0; background: #fff; }
-  .wrap { max-width: 880px; margin: 0 auto; padding: 16px; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 16px; }
   .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; }
   h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; margin: 0; }
   h2 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 8px; display: flex; align-items: baseline; gap: 8px; }
@@ -39,10 +40,13 @@
   .add-btn:hover { background: #374151; }
 
   .table { border-radius: 10px; border: 1px solid #e5e7eb; }
-  .thead, .trow { display: grid; grid-template-columns: 26px 44px 3fr 5fr 4fr; }
+  .thead, .trow { display: grid; grid-template-columns: 26px 44px var(--c-track) var(--c-tags) minmax(140px, 1fr); }
   .thead { background: #f3f4f6; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 10px 10px 0 0; }
   .rows .trow:last-child { border-radius: 0 0 10px 10px; }
-  .thead > div { padding: 8px 12px; }
+  .thead > div { padding: 8px 12px; position: relative; }
+  .resizer { position: absolute; top: 0; right: -1px; width: 10px; height: 100%; cursor: col-resize; z-index: 5; }
+  .resizer::after { content: ""; position: absolute; right: 4px; top: 6px; bottom: 6px; width: 2px; background: transparent; border-radius: 2px; }
+  .resizer:hover::after { background: #cbd5e1; }
   .rows.dropzone-active { background: #eef6ff; }
   .handle { display: flex; align-items: center; justify-content: center; color: #d1d5db; cursor: grab; padding-top: 12px; }
   .handle:hover { color: #9ca3af; }
@@ -58,11 +62,11 @@
 
   .trow { border-top: 1px solid #f3f4f6; align-items: start; }
   .trow.alt { background: rgba(249,250,251,.5); }
-  .cell { padding: 10px 12px; }
-  .cell input.title, .cell textarea { width: 100%; border: none; outline: none; background: transparent; font: inherit; border-radius: 4px; margin-left: -4px; padding: 1px 4px; }
+  .cell { padding: 10px 12px; min-width: 0; }
+  .cell input.title, .cell textarea { width: 100%; border: none; outline: none; background: transparent; font: inherit; border-radius: 4px; margin-left: -4px; padding: 1px 4px; min-width: 0; }
   .cell input.title { font-size: 14px; font-weight: 500; }
   .cell input.title:focus, .cell textarea:focus { background: #fff; }
-  .cell textarea { font-size: 14px; resize: none; min-height: 24px; line-height: 1.4; }
+  .cell textarea { font-size: 14px; resize: none; min-height: 22px; line-height: 1.4; display: block; }
   .cell textarea::placeholder { color: #d1d5db; }
 
   .tagcell { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
@@ -72,19 +76,46 @@
   .addtag { width: 20px; height: 20px; border-radius: 999px; border: 1px dashed #d1d5db; color: #9ca3af; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .addtag:hover { border-color: #6b7280; color: #4b5563; }
   .picker-anchor { position: relative; }
-  .picker { position: absolute; z-index: 50; margin-top: 4px; left: 0; width: 190px; background: #fff; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.12); border: 1px solid #e5e7eb; padding: 6px; }
+  .picker { position: absolute; z-index: 50; margin-top: 4px; left: 0; width: 200px; background: #fff; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.12); border: 1px solid #e5e7eb; padding: 6px; }
   .picker button { width: 100%; display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 6px; font-size: 12px; border: none; background: none; cursor: pointer; text-align: left; }
   .picker button:hover { background: #f9fafb; }
   .pdot { width: 12px; height: 12px; border-radius: 999px; flex-shrink: 0; }
   .overlay { position: fixed; inset: 0; z-index: 10; }
 
-  .notecell { display: flex; align-items: start; gap: 2px; }
-  .rowbtn { opacity: 0; color: #d1d5db; background: none; border: none; cursor: pointer; margin-top: 2px; flex-shrink: 0; padding: 2px; }
-  .trow:hover .rowbtn { opacity: 1; }
+  .notecell { display: flex; align-items: flex-start; gap: 4px; }
+  .tawrap { flex: 1; min-width: 0; }
+  .rowbtns { display: flex; gap: 1px; padding-top: 6px; flex-shrink: 0; }
+  .rowbtn { color: #d1d5db; background: none; border: none; cursor: pointer; padding: 2px; display: flex; }
+  .rowbtn.move, .rowbtn.del { opacity: 0; }
+  .trow:hover .rowbtn.move, .trow:hover .rowbtn.del { opacity: 1; }
+  .rowbtn.chev { color: #9ca3af; }
+  .rowbtn.chev svg { transition: transform .15s; }
   .rowbtn.move:hover { color: #3a9dc4; }
   .rowbtn.del:hover { color: #ef4444; }
+  .rowbtn.chev:hover { color: #4b5563; }
+  .rowbtn.nudge { display: none; }
   .empty { padding: 24px 12px; text-align: center; font-size: 14px; color: #9ca3af; }
   svg { display: block; }
+
+  /* ---- Mobile: reflow each row into a stacked card ---- */
+  @media (max-width: 640px) {
+    .wrap { padding: 12px; }
+    h1 { font-size: 18px; }
+    .thead { display: none; }
+    .trow { grid-template-columns: 26px 1fr; grid-template-areas: "num title" "tags tags" "notes notes"; padding: 11px 12px 13px; column-gap: 6px; row-gap: 4px; align-items: center; }
+    .trow .handle { display: none; }
+    .num { grid-area: num; text-align: left; padding: 0; font-weight: 600; color: #6b7280; }
+    .trow > .cell:not(.tagcell):not(.notecell) { grid-area: title; padding: 0; }
+    .cell input.title { font-size: 15px; }
+    .tagcell { grid-area: tags; padding: 4px 0 0; }
+    .notecell { grid-area: notes; padding: 4px 0 0; }
+    .rowbtns { padding-top: 2px; }
+    .rowbtn { padding: 6px; }
+    .rowbtn.move, .rowbtn.del { opacity: 1; }
+    .rowbtn.nudge { display: flex; }
+    .resizer { display: none; }
+    .picker { left: auto; right: 0; }
+  }
 </style>
 
 <div class="wrap">
@@ -112,8 +143,9 @@
     <div class="table">
       <div class="thead">
         <div></div><div style="text-align:center">#</div>
-        <div><button class="sort-btn" data-sort="album">Track ⇅ <span class="sort-state" id="sortstate-album"></span></button></div>
-        <div>Attention</div><div>Notes</div>
+        <div><button class="sort-btn" data-sort="album">Track ⇅ <span class="sort-state" id="sortstate-album"></span></button><div class="resizer" data-col="track"></div></div>
+        <div>Attention<div class="resizer" data-col="tags"></div></div>
+        <div>Notes</div>
       </div>
       <div class="rows" id="rows-album" data-list="album"></div>
     </div>
@@ -130,8 +162,9 @@
     <div class="table">
       <div class="thead">
         <div></div><div style="text-align:center">#</div>
-        <div><button class="sort-btn" data-sort="potentials">Track ⇅ <span class="sort-state" id="sortstate-potentials"></span></button></div>
-        <div>Attention</div><div>Notes</div>
+        <div><button class="sort-btn" data-sort="potentials">Track ⇅ <span class="sort-state" id="sortstate-potentials"></span></button><div class="resizer" data-col="track"></div></div>
+        <div>Attention<div class="resizer" data-col="tags"></div></div>
+        <div>Notes</div>
       </div>
       <div class="rows" id="rows-potentials" data-list="potentials"></div>
     </div>
@@ -148,24 +181,48 @@ const SUPABASE_ANON_KEY = "sb_publishable_VoVJt1U9WhgGLq-r0nh9PQ_t9zadffx";
 
 const LISTS = ["album", "potentials"];
 const DEFAULT_TAGS = [
-  { id: "lead",     label: "lead vocal",       color: "#e8554e" },
-  { id: "backing",  label: "backing vocal",    color: "#f08a3c" },
-  { id: "instr",    label: "instrumentation",  color: "#e8b73a" },
-  { id: "arr",      label: "arrangement",      color: "#5bb85b" },
-  { id: "prod",     label: "production",       color: "#3a9dc4" },
-  { id: "mix",      label: "mix",              color: "#7a6ad8" },
-  { id: "lyrics",   label: "lyrics",           color: "#9c6b3f" },
-  { id: "bounce",   label: "bounce stems",     color: "#6b7280" },
-  { id: "bounced",  label: "stems bounced 👍", color: "#16a34a" },
-  { id: "luke",     label: "Luke",             color: "#c44d8f" },
-  { id: "coleman",  label: "Coleman",          color: "#1f9e8a" },
+  { id: "lead",     label: "lead vocal",      emoji: "🎤", color: "#e8554e" },
+  { id: "backing",  label: "backing vocal",   emoji: "🎵", color: "#f08a3c" },
+  { id: "instr",    label: "instrumentation", emoji: "🎸", color: "#e8b73a" },
+  { id: "arr",      label: "arrangement",     emoji: "🎼", color: "#5bb85b" },
+  { id: "prod",     label: "production",      emoji: "🎛️", color: "#3a9dc4" },
+  { id: "mix",      label: "mix",             emoji: "🎚️", color: "#7a6ad8" },
+  { id: "lyrics",   label: "lyrics",          emoji: "✍️", color: "#9c6b3f" },
+  { id: "bounce",   label: "bounce stems",    emoji: "⏳", color: "#6b7280" },
+  { id: "bounced",  label: "stems bounced",   emoji: "✅", color: "#16a34a" },
+  { id: "luke",     label: "Luke",            emoji: "💗", color: "#c44d8f" },
+  { id: "coleman",  label: "Coleman",         emoji: "💙", color: "#2563eb" },
 ];
 const EXCLUSIVE = [["bounce", "bounced"]];
 const SWATCHES = ["#e8554e","#f08a3c","#e8b73a","#5bb85b","#3a9dc4","#7a6ad8","#c44d8f","#1f9e8a","#8a8f98","#d4654f"];
 const uid = () => Math.random().toString(36).slice(2, 9);
 const CONFIGURED = !SUPABASE_URL.includes("YOUR-PROJECT") && !SUPABASE_ANON_KEY.includes("YOUR-ANON");
+const DEFAULT_IDS = new Set(DEFAULT_TAGS.map(t => t.id));
 
-let state = { tracks: [], tagDefs: DEFAULT_TAGS.slice(), filter: [], sort: { album: "custom", potentials: "custom" }, picker: null, newTag: false, newTagColor: SWATCHES[0], dragId: null };
+let state = { tracks: [], tagDefs: DEFAULT_TAGS.slice(), filter: [], sort: { album: "custom", potentials: "custom" }, picker: null, newTag: false, newTagColor: SWATCHES[0], dragId: null, expanded: new Set() };
+
+/* ---- Resizable columns (saved per browser) ------------------------ */
+function loadCols() { try { const v = JSON.parse(localStorage.getItem("cm_cols")); if (v && v.track && v.tags) return { track: v.track, tags: v.tags }; } catch {} return { track: 200, tags: 300 }; }
+let cols = loadCols();
+function applyCols() { const r = document.documentElement.style; r.setProperty("--c-track", cols.track + "px"); r.setProperty("--c-tags", cols.tags + "px"); }
+function saveCols() { try { localStorage.setItem("cm_cols", JSON.stringify(cols)); } catch {} }
+function startResize(e, leftKey, rightKey) {  // trade width between two fixed columns
+  e.preventDefault(); e.stopPropagation();
+  const startX = e.clientX, lw = cols[leftKey], rw = cols[rightKey];
+  const mm = ev => { let d = ev.clientX - startX, nl = lw + d, nr = rw - d; if (nl < 90) { nr -= 90 - nl; nl = 90; } if (nr < 90) { nl -= 90 - nr; nr = 90; } cols[leftKey] = Math.round(nl); cols[rightKey] = Math.round(nr); applyCols(); };
+  const mu = () => { document.removeEventListener("mousemove", mm); document.removeEventListener("mouseup", mu); saveCols(); };
+  document.addEventListener("mousemove", mm); document.addEventListener("mouseup", mu);
+}
+function startResizeSingle(e, key) {  // resize one fixed column; Notes absorbs the difference
+  e.preventDefault(); e.stopPropagation();
+  const table = e.target.closest(".table");
+  const avail = table ? table.clientWidth : 900;
+  const maxW = avail - 26 - 44 - (key === "tags" ? cols.track : 0) - 160;  // keep >=160 for Notes
+  const startX = e.clientX, sw = cols[key];
+  const mm = ev => { let nw = sw + (ev.clientX - startX); nw = Math.max(90, Math.min(nw, Math.max(120, maxW))); cols[key] = Math.round(nw); applyCols(); };
+  const mu = () => { document.removeEventListener("mousemove", mm); document.removeEventListener("mouseup", mu); saveCols(); };
+  document.addEventListener("mousemove", mm); document.addEventListener("mouseup", mu);
+}
 
 /* ---- Supabase REST helpers ---------------------------------------- */
 async function api(path, opts = {}) {
@@ -200,11 +257,11 @@ async function fetchAll() {
       tags: Array.isArray(t.tags) ? t.tags.filter(g => g !== "needs") : [],
       position: t.position || 0, list: LISTS.includes(t.list) ? t.list : "album",
     }));
-    if (meta && meta[0] && meta[0].data && Array.isArray(meta[0].data.tags)) {
-      const saved = meta[0].data.tags.filter(t => t.id !== "needs");
-      const have = new Set(saved.map(t => t.id));
-      state.tagDefs = [...saved, ...DEFAULT_TAGS.filter(t => !have.has(t.id))];
-    }
+    // built-in tags always come from this file; only custom tags persist in the DB
+    let customSaved = [];
+    if (meta && meta[0] && meta[0].data && Array.isArray(meta[0].data.tags))
+      customSaved = meta[0].data.tags.filter(t => !DEFAULT_IDS.has(t.id) && t.id !== "needs");
+    state.tagDefs = [...DEFAULT_TAGS, ...customSaved];
     render();
   } catch (e) { setStatus("bad", "offline"); console.error(e); }
 }
@@ -221,7 +278,7 @@ async function addTrack(list) {
   try { await insert("tracks", row); } catch (e) { setStatus("bad", "offline"); }
 }
 async function removeTrack(id) {
-  state.tracks = state.tracks.filter(t => t.id !== id); render();
+  state.tracks = state.tracks.filter(t => t.id !== id); state.expanded.delete(id); render();
   try { await del("tracks", "id=eq." + id); } catch (e) { setStatus("bad", "offline"); }
 }
 let editTimer = {};
@@ -246,6 +303,15 @@ function flipList(id) {
   tr.list = tr.list === "album" ? "potentials" : "album";
   state.tracks = state.tracks.filter(t => t.id !== id);
   state.tracks.push(tr);
+  renumber(); render(); upsertAll();
+}
+function nudge(id, dir) {  // dir = -1 up, +1 down, within the track's list
+  const tr = state.tracks.find(t => t.id === id); if (!tr) return;
+  const listItems = state.tracks.filter(t => t.list === tr.list);
+  const idx = listItems.findIndex(t => t.id === id);
+  const swap = listItems[idx + dir]; if (!swap) return;
+  const a = state.tracks.indexOf(tr), b = state.tracks.indexOf(swap);
+  [state.tracks[a], state.tracks[b]] = [state.tracks[b], state.tracks[a]];
   renumber(); render(); upsertAll();
 }
 function moveTrack(dragId, targetId, after) {
@@ -273,7 +339,8 @@ function cycleSort(list) { const s = state.sort[list]; state.sort[list] = s === 
 async function addTagDef() {
   const inp = document.getElementById("newtaginput"); const label = inp.value.trim(); if (!label) return;
   state.tagDefs.push({ id: uid(), label, color: state.newTagColor }); state.newTag = false; render();
-  try { await upsert("app_meta", { id: "tagdefs", data: { tags: state.tagDefs } }); } catch (e) { setStatus("bad", "offline"); }
+  const customs = state.tagDefs.filter(t => !DEFAULT_IDS.has(t.id));
+  try { await upsert("app_meta", { id: "tagdefs", data: { tags: customs } }); } catch (e) { setStatus("bad", "offline"); }
 }
 
 /* ---- DOM helpers + icons ------------------------------------------ */
@@ -294,19 +361,22 @@ const PLUS = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke
 const TRASH = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
 const GRIP = '<svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor"><circle cx="3.5" cy="3" r="1.5"/><circle cx="8.5" cy="3" r="1.5"/><circle cx="3.5" cy="8" r="1.5"/><circle cx="8.5" cy="8" r="1.5"/><circle cx="3.5" cy="13" r="1.5"/><circle cx="8.5" cy="13" r="1.5"/></svg>';
 const MOVE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l-3 3 3 3"/><path d="M4 13h11"/><path d="M17 14l3-3-3-3"/><path d="M20 11H9"/></svg>';
+const CHEVRON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>';
+const UP = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>';
+const DOWN = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>';
 function tagById(id) { return state.tagDefs.find(t => t.id === id); }
+function tagText(t) { return (t.emoji ? t.emoji + " " : "") + t.label; }
 
 function render() {
   const banner = document.getElementById("banner");
   if (!CONFIGURED) { banner.style.display = ""; banner.innerHTML = "Not connected. Add your <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> near the top of this file, then reload."; setStatus("wait", "not set up"); }
   else banner.style.display = "none";
 
-  // legend (global)
   const legend = document.getElementById("legend-chips");
   legend.innerHTML = "";
   state.tagDefs.forEach(t => {
     const active = state.filter.includes(t.id);
-    legend.appendChild(el("button", { class: "filterchip", style: { background: active ? t.color : t.color + "22", color: active ? "#fff" : t.color, borderColor: t.color + (active ? "" : "55") }, onClick: () => toggleFilter(t.id) }, [t.label]));
+    legend.appendChild(el("button", { class: "filterchip", style: { background: active ? t.color : t.color + "22", color: active ? "#fff" : t.color, borderColor: t.color + (active ? "" : "55") }, onClick: () => toggleFilter(t.id) }, [tagText(t)]));
   });
   if (state.newTag) {
     const wrap = el("span", { class: "newtag-edit" });
@@ -324,7 +394,6 @@ function render() {
   if (state.filter.length) { cf.style.display = ""; cf.textContent = "clear filter (" + state.filter.length + ")"; cf.onclick = () => { state.filter = []; render(); }; }
   else cf.style.display = "none";
 
-  // preserve focus
   const ae = document.activeElement;
   let focus = null;
   if (ae && ae.dataset && ae.dataset.trackid) focus = { id: ae.dataset.trackid, field: ae.dataset.field, s: ae.selectionStart, e: ae.selectionEnd };
@@ -338,7 +407,7 @@ function render() {
 }
 
 function renderTable(list) {
-  const items = state.tracks.filter(t => t.list === list);              // array order = album order
+  const items = state.tracks.filter(t => t.list === list);
   const orderNum = {}; items.forEach((t, i) => orderNum[t.id] = i + 1);
   document.getElementById("count-" + list).textContent = items.length ? "(" + items.length + ")" : "";
   const sort = state.sort[list];
@@ -381,7 +450,7 @@ function renderTable(list) {
     const tagcell = el("div", { class: "cell tagcell" });
     tr.tags.forEach(tid => {
       const t = tagById(tid); if (!t) return;
-      const chip = el("span", { class: "tagchip", style: { background: t.color } }, [t.label]);
+      const chip = el("span", { class: "tagchip", style: { background: t.color } }, [tagText(t)]);
       chip.appendChild(el("button", { html: X, onClick: () => toggleTrackTag(tr.id, tid) }));
       tagcell.appendChild(chip);
     });
@@ -394,7 +463,7 @@ function renderTable(list) {
         const on = tr.tags.includes(t.id);
         pick.appendChild(el("button", { onClick: () => toggleTrackTag(tr.id, t.id) }, [
           el("span", { class: "pdot", style: { background: on ? t.color : "transparent", border: "2px solid " + t.color } }),
-          el("span", { style: { fontWeight: on ? "600" : "400" } }, [t.label])
+          el("span", { style: { fontWeight: on ? "600" : "400" } }, [tagText(t)])
         ]));
       });
       anchor.appendChild(pick);
@@ -402,22 +471,51 @@ function renderTable(list) {
     tagcell.appendChild(anchor);
     row.appendChild(tagcell);
 
+    // notes — compact by default, click chevron to expand
     const notecell = el("div", { class: "cell notecell" });
+    const tawrap = el("div", { class: "tawrap" });
     const ta = el("textarea", { placeholder: "notes…", rows: "1" });
     ta.dataset.trackid = tr.id; ta.dataset.field = "notes"; ta.value = tr.notes;
-    const autosize = () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; };
-    ta.addEventListener("input", e => { editTrackField(tr.id, "notes", e.target.value); autosize(); });
-    notecell.appendChild(ta);
-    notecell.appendChild(el("button", { class: "rowbtn move", html: MOVE, title: list === "album" ? "Move to Potentials" : "Move to The Album", onClick: () => flipList(tr.id) }));
-    notecell.appendChild(el("button", { class: "rowbtn del", html: TRASH, title: "Delete", onClick: () => removeTrack(tr.id) }));
+    tawrap.appendChild(ta);
+    const COLLAPSED = 46;
+    const chev = el("button", { class: "rowbtn chev", html: CHEVRON, title: "Expand notes" });
+    function size() {
+      const expanded = state.expanded.has(tr.id);
+      ta.style.height = "auto";
+      const full = ta.scrollHeight;
+      const overflow = full > COLLAPSED + 4;
+      if (expanded) { ta.style.height = full + "px"; ta.style.overflowY = "hidden"; }
+      else { ta.style.height = Math.min(full, COLLAPSED) + "px"; ta.style.overflowY = overflow ? "auto" : "hidden"; }
+      chev.style.display = overflow ? "" : "none";
+      chev.querySelector("svg").style.transform = expanded ? "rotate(180deg)" : "none";
+      chev.title = expanded ? "Collapse notes" : "Expand notes";
+    }
+    chev.addEventListener("click", () => { if (state.expanded.has(tr.id)) state.expanded.delete(tr.id); else state.expanded.add(tr.id); size(); });
+    ta.addEventListener("input", e => { editTrackField(tr.id, "notes", e.target.value); size(); });
+
+    const btns = el("div", { class: "rowbtns" });
+    btns.appendChild(chev);
+    if (canDrag) {
+      btns.appendChild(el("button", { class: "rowbtn nudge", html: UP, title: "Move up", onClick: () => nudge(tr.id, -1) }));
+      btns.appendChild(el("button", { class: "rowbtn nudge", html: DOWN, title: "Move down", onClick: () => nudge(tr.id, 1) }));
+    }
+    btns.appendChild(el("button", { class: "rowbtn move", html: MOVE, title: list === "album" ? "Move to Potentials" : "Move to The Album", onClick: () => flipList(tr.id) }));
+    btns.appendChild(el("button", { class: "rowbtn del", html: TRASH, title: "Delete", onClick: () => removeTrack(tr.id) }));
+    notecell.appendChild(tawrap);
+    notecell.appendChild(btns);
     row.appendChild(notecell);
-    setTimeout(autosize, 0);
+    setTimeout(size, 0);
 
     rows.appendChild(row);
   });
 }
 
 /* ---- wire up ------------------------------------------------------ */
+applyCols();
+document.querySelectorAll(".resizer").forEach(rz => rz.addEventListener("mousedown", e => {
+  if (rz.dataset.col === "track") startResize(e, "track", "tags");
+  else startResizeSingle(e, "tags");
+}));
 document.querySelectorAll("[data-add]").forEach(b => b.addEventListener("click", () => addTrack(b.dataset.add)));
 LISTS.forEach(list => {
   document.getElementById("add-" + list).addEventListener("keydown", e => { if (e.key === "Enter") addTrack(list); });
